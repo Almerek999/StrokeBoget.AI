@@ -19,7 +19,7 @@ face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refi
 
 # 3. Настройка ИИ для анализа речи
 recognizer = sr.Recognizer()
-target_phrase = "за окном сегодня светит яркое солнце"
+target_phrase = "You can't teach an old dog new tricks"
 
 # Включаем камеру
 cap = cv2.VideoCapture(0)
@@ -90,7 +90,7 @@ while cap.isOpened():
         cv2.waitKey(1) # Заморозка кадра на время записи звука
         
         print("\n" + "="*30)
-        print("🎙️ ГОВОРИТЕ: «За окном сегодня светит яркое солнце»")
+        print("🎙️ Speak: «You can't teach an old dog new tricks»")
         
         with sr.Microphone() as source:
             recognizer.adjust_for_ambient_noise(source, duration=0.5)
