@@ -1,4 +1,4 @@
-# KOPIR.AI 🧠⚡️
+# BogetStroke.AI 🧠⚡️
 **Multimodal 2-Factor Stroke Detection System**
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)
@@ -7,7 +7,7 @@
 ![Status](https://img.shields.io/badge/Status-MVP-success)
 
 ## 📌 About the Project
-**KOPIR.AI** is an automated, real-time diagnostic tool designed to detect early signs of a stroke using everyday consumer hardware (webcams and microphones). By digitizing the standard **FAST** (Face, Arms, Speech, Time) medical protocol, the system eliminates human error, panic, and subjectivity during a medical emergency.
+**BogetStroke.AI** is an automated, real-time diagnostic tool designed to detect early signs of a stroke using everyday consumer hardware (webcams and microphones). By digitizing the standard **FAST** (Face, Arms, Speech, Time) medical protocol, the system eliminates human error, panic, and subjectivity during a medical emergency.
 
 The system utilizes a dual-verification approach combining **Computer Vision (CV)** and **Natural Language Processing (NLP)** to accurately diagnose symptoms and automatically trigger an emergency SOS protocol within the critical "Golden Hour".
 
