@@ -1,67 +1,69 @@
-# AntiStroke.AI - Интеллектуальная Система Раннего Распознавания Инсульта
+# StrokeBoget.AI - Intelligent Early Stroke Detection System
 
-AntiStroke.AI — это веб-приложение на базе искусственного интеллекта (компьютерного зрения и анализа аудио), которое помогает моментально выявить признаки инсульта по протоколу FAST (Face, Arms, Speech, Time) с помощью камеры смартфона или компьютера.
+*[🇷🇺 Читать на русском (Read in Russian)](README_RU.md)*
 
-В случае обнаружения тревожных признаков, система автоматически и моментально оповещает родственников через Email и Telegram, передавая им точные GPS координаты, адрес пациента и маршрут до ближайшей больницы.
+StrokeBoget.AI is an AI-powered web application (leveraging computer vision and audio analysis) designed to instantly identify early signs of a stroke using the FAST (Face, Arms, Speech, Time) protocol via a smartphone or computer camera.
 
-## 🌟 Основной Функционал
-1. **Нейросетевой анализ лица**: Распознает асимметрию лица (один из главных признаков инсульта) в реальном времени с помощью обученной нейросети и `mediapipe`.
-2. **Анализ речи**: Оценивает нарушения дикции пациента через аудиозапись, сравнивая ее с эталонной фразой.
-3. **Автоматический протокол SOS**: Мгновенно рассылает экстренные уведомления с геолокацией (Reverse Geocoding).
-4. **Поиск ближайшей больницы**: Автоматически находит ближайшее мед. учреждение через OpenStreetMap API и строит до него маршрут.
+Upon detecting alarming symptoms, the system automatically and instantly alerts relatives via Email and Telegram, providing them with the exact GPS coordinates, physical address of the patient, and a route to the nearest hospital.
 
-## 🛠 Технологический стек
+## 🌟 Key Features
+1. **Neural Face Analysis**: Detects facial asymmetry (one of the primary indicators of a stroke) in real-time using a custom-trained neural network and `mediapipe`.
+2. **Speech Analysis**: Evaluates speech impairment by recording the patient's voice and comparing their dictation to a reference phrase using natural language processing.
+3. **Automated SOS Protocol**: Instantly broadcasts emergency alerts with the patient's geolocation (via Reverse Geocoding).
+4. **Nearest Hospital Routing**: Automatically locates the nearest medical facility via the OpenStreetMap API and generates a direct navigation route.
+
+## 🛠 Technology Stack
 - **Backend:** Python, Flask, OpenCV, MediaPipe
-- **Machine Learning:** TensorFlow/Keras (Dense нейросеть обученная на датасете симметрии)
-- **Аудио и Распознавание:** SpeechRecognition, Google Web Speech API, ffmpeg
-- **Интеграции:** Telegram Bot API, SMTP Email, Nominatim API (Геокодирование), Overpass API (Карты больниц)
+- **Machine Learning:** TensorFlow/Keras (Dense neural network trained on a facial symmetry dataset)
+- **Audio & Recognition:** SpeechRecognition, Google Web Speech API, ffmpeg
+- **Integrations:** Telegram Bot API, SMTP Email, Nominatim API (Geocoding), Overpass API (Hospital mapping)
 - **Frontend:** HTML5, CSS3, JavaScript, WebRTC (getUserMedia API)
 
-## 🚀 Установка и запуск (для разработчиков)
+## 🚀 Setup and Installation (For Developers)
 
-### 1. Клонирование репозитория
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/ВАШ_НИК/AntiStroke.AI.git
-cd AntiStroke.AI
+git clone https://github.com/Almerek999/StrokeBoget.AI.git
+cd StrokeBoget.AI
 ```
 
-### 2. Установка зависимостей
-Рекомендуется использовать виртуальное окружение:
+### 2. Install Dependencies
+It is highly recommended to use a virtual environment:
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate  # Для Mac/Linux
-# На Windows: .venv\Scripts\activate
+source .venv/bin/activate  # For Mac/Linux
+# For Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
 
-*(Если файла `requirements.txt` нет, установите основные пакеты: `flask tensorflow opencv-python mediapipe SpeechRecognition requests python-dotenv static-ffmpeg`)*
+*(If `requirements.txt` is missing, install the core packages: `flask tensorflow opencv-python mediapipe SpeechRecognition requests python-dotenv static-ffmpeg`)*
 
-### 3. Настройка переменных окружения (API Ключи)
-В папке `src/` создайте файл `.env` и добавьте в него следующие настройки (замените данные на свои):
+### 3. Configure Environment Variables (API Keys)
+Create a `.env` file in the `src/` directory and add the following settings (replace with your credentials):
 
 ```env
-# Настройки отправки Email (Вам потребуется "Пароль приложения" от Google)
-SYSTEM_EMAIL=ваш_почта@gmail.com
-SYSTEM_EMAIL_PASSWORD=ваш_пароль_приложения
+# Email Notification Settings (Requires a Google "App Password")
+SYSTEM_EMAIL=your_email@gmail.com
+SYSTEM_EMAIL_PASSWORD=your_app_password
 
-# Настройки Telegram
-# Получите токен у @BotFather в Telegram
+# Telegram Settings
+# Obtain a token from @BotFather on Telegram
 TELEGRAM_BOT_TOKEN=123456789:ABCDefgh12345
-# Ваш Chat ID (на случай, если пользователь на сайте не ввел свой) - можно узнать у @userinfobot
+# Your default Chat ID (Used as a fallback if the user doesn't provide one on the website) - get it from @userinfobot
 TELEGRAM_CHAT_ID=12345678
 ```
 
-### 4. Запуск сервера
+### 4. Run the Server
 ```bash
 python3 src/app.py
 ```
 
-Откройте в браузере `http://127.0.0.1:5055`. 
-Для тестирования камеры на мобильном телефоне в локальной сети потребуется настроить безопасный туннель (например, `localhost.run`, `ngrok` или `localtunnel`), так как браузеры блокируют доступ к камере по `http` (кроме localhost).
+Open your browser and navigate to `http://127.0.0.1:5055`. 
+To test the camera on a mobile phone within the same local network, you will need to set up a secure tunnel (e.g., `localhost.run`, `ngrok`, or `localtunnel`), as modern browsers block camera access over `http` (except for localhost).
 
-## 🔒 Приватность
-Данные видео и аудио обрабатываются налету (in-memory) либо во временных файлах сервера, которые сразу перезаписываются. Никакие личные биометрические данные не сохраняются в базу данных на постоянной основе.
+## 🔒 Privacy & Security
+Video and audio data are processed on the fly (in-memory) or via temporary server files that are immediately overwritten. No personal biometric data is persistently stored in any database.
 
-## 📝 Статус проекта
-Проект является исследовательским прототипом. Нейросеть обучена для базовой демонстрации и должна проходить дальнейшую клиническую валидацию. Система не заменяет вызов профессиональной скорой медицинской помощи (103/112).
+## 📝 Project Status & Disclaimer
+This project is an early-stage research prototype. The neural network is trained for basic demonstration purposes and requires further clinical validation. **This system does not replace calling professional emergency medical services (911/112/103).**
