@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anti-Stroke Mobile</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 { color: #ff4d4d; text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #ccc; }
+        input {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            background-color: #2d2d2d; color: #ffffff; font-size: 16px; box-sizing: border-box;
+        }
+        button {
+            background-color: #ff4d4d; color: white; border: none; padding: 16px;
+            width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        button:hover { background-color: #ff3333; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        
+        #scanner-screen { display: none; text-align: center; width: 100%; }
+        #video-container {
+            position: relative; width: 100%; max-width: 400px; margin: 0 auto;
+            border-radius: 20px; overflow: hidden; border: 4px solid #333;
+        }
+        video { width: 100%; display: block; transform: scaleX(-1); }
+        .status-badge {
+            position: absolute; top: 10px; left: 10px; padding: 5px 10px;
+            border-radius: 10px; font-weight: bold; background: rgba(0,0,0,0.6);
+        }
+        .status-normal { color: #4CAF50; }
+        .status-danger { color: #ff4d4d; }
+        
+        #instruction-text {
+            font-size: 24px; font-weight: bold; color: #ffd700;
+            margin: 20px 0; min-height: 60px;
+        }
+        
+        #sos-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ff0000; color: white; z-index: 9999;
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #sos-screen h1 { color: white; font-size: 40px; margin-bottom: 20px; }
+        #sos-screen p { font-size: 22px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <div id="registration-screen" class="container">
+        <h1>Anti-Stroke</h1>
+        <p style="text-align:center; color:#888;">Введите данные для экстренной связи</p>
+        
+        <div class="input-group">
+            <label>Ваше Имя (Пациент):</label>
+            <input type="text" id="p_name" placeholder="Например: Иван">
+        </div>
+        <div class="input-group">
+            <label>Имя Родственника:</label>
+            <input type="text" id="r_name" placeholder="Например: Мария">
+        </div>
+        <div class="input-group">
+            <label>Email Родственника (Сюда придет SOS):</label>
+            <input type="email" id="r_email" placeholder="example@gmail.com">
+        </div>
+        <div class="input-group">
+            <label>Домашний адрес (если GPS недоступен):</label>
+            <input type="text" id="p_address" placeholder="Например: г. Астана, ул. Абая 10, кв 5">
+        </div>
+        <div class="input-group">
+            <label>Telegram Chat ID (Опционально):<br><span style="font-size:12px; color:#888;">Узнать свой ID можно в боте <a href="https://t.me/userinfobot" target="_blank" style="color: #4CAF50;">@userinfobot (нажмите здесь)</a></span></label>
+            <input type="text" id="r_tg" placeholder="Например: 123456789">
+        </div>
+        
+        <button onclick="startApp()">Включить Сканер</button>
+    </div>
+
+    <!-- ЭКРАН СКАНЕРА -->
+    <div id="scanner-screen" class="container">
+        <h2 style="margin-top:0;">Мониторинг</h2>
+        <div id="gps-status" style="margin-bottom: 10px; font-size: 14px; color: #ffaa00;">📍 Поиск GPS...</div>
+        
+        <div id="video-container">
+            <video id="video" autoplay playsinline muted></video>
+            <div id="face-status" class="status-badge status-normal">Лицо: ПОИСК...</div>
+        </div>
+
+        <div id="instruction-text"></div>
+        
+        <button id="voice-btn" onclick="startVoiceTest()">Проверить Речь</button>
+    </div>
+
+    <!-- ЭКРАН SOS -->
+    <div id="sos-screen">
+        <h1>!!! ВЫЯВЛЕН ИНСУЛЬТ !!!</h1>
+        <p>1. Сохраняйте спокойствие и сядьте</p>
+        <p>2. Обеспечьте приток воздуха</p>
+        <p>3. <b>НЕ ПЕЙТЕ ВОДУ И ТАБЛЕТКИ</b></p>
+        <p style="margin-top:30px; font-weight:bold; color:#ffeb3b;">Сигнал родственникам отправлен!</p>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    let stream = null;
+    let faceCheckInterval = null;
+    let isFaceAsymmetric = false;
+    let userLat = null;
+    let userLon = null;
+    
+    // Получение элементов
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const faceStatus = document.getElementById('face-status');
+    const instructionText = document.getElementById('instruction-text');
+    const voiceBtn = document.getElementById('voice-btn');
+    const gpsStatus = document.getElementById('gps-status');
+
+    async function startApp() {
+        const r_email = document.getElementById('r_email').value;
+        if(!r_email) {
+            alert("Пожалуйста, введите Email родственника!");
+            return;
+        }
+
+        document.getElementById('registration-screen').style.display = 'none';
+        document.getElementById('scanner-screen').style.display = 'block';
+        
+        // Запрашиваем GPS координаты у телефона
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLat = position.coords.latitude;
+                    userLon = position.coords.longitude;
+                    gpsStatus.innerText = "📍 GPS: Подключен";
+                    gpsStatus.style.color = "#4CAF50";
+                },
+                (error) => {
+                    gpsStatus.innerText = "📍 GPS: Заблокирован или недоступен (" + error.message + ")";
+                    gpsStatus.style.color = "#ff4d4d";
+                },
+                { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+            );
+        } else {
+            gpsStatus.innerText = "📍 GPS: Не поддерживается устройством";
+            gpsStatus.style.color = "#ff4d4d";
+        }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+            video.srcObject = stream;
+            
+            // Начинаем проверять лицо каждые 1.5 секунды
+            faceCheckInterval = setInterval(sendFaceFrame, 1500);
+        } catch (err) {
+            alert("Ошибка доступа к камере или микрофону! Убедитесь, что вы открыли сайт по HTTPS.");
+            console.error(err);
+        }
+    }
+
+    async function sendFaceFrame() {
+        if (!video.videoWidth) return;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+        try {
+            const response = await fetch('/analyze_face', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64Image })
+            });
+            const result = await response.json();
+            
+            if (result.success && result.asymmetry !== undefined) {
+                isFaceAsymmetric = result.asymmetry;
+                if (isFaceAsymmetric) {
+                    faceStatus.textContent = "Лицо: АСИММЕТРИЯ!";
+                    faceStatus.className = "status-badge status-danger";
+                } else {
+                    faceStatus.textContent = "Лицо: НОРМА";
+                    faceStatus.className = "status-badge status-normal";
+                }
+            }
+        } catch (e) {
+            console.error("Ошибка анализа лица:", e);
+        }
+    }
+
+    function speak(text, callback) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Сброс залипших фраз (баг iOS/Android)
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ru-RU';
+            utterance.onend = callback;
+            window.speechSynthesis.speak(utterance);
+        } else {
+            if (callback) callback();
+        }
+    }
+
+    async function startVoiceTest() {
+        voiceBtn.disabled = true;
+        
+        // Разблокировка синтезатора речи для асинхронных вызовов (особенность Safari/Chrome)
+        if ('speechSynthesis' in window) {
+            const unlock = new SpeechSynthesisUtterance('');
+            window.speechSynthesis.speak(unlock);
+        }
+        
+        // 1. Показываем текст и говорим инструкцию
+        instructionText.innerText = "ЗА ОКНОМ СЕГОДНЯ СВЕТИТ ЯРКОЕ СОЛНЦЕ";
+        speak("Пожалуйста, повторите фразу на экране.", () => {
+            // 2. После озвучки начинаем запись аудио
+            recordAudio();
+        });
+    }
+
+    function recordAudio() {
+        voiceBtn.innerText = "🎤 Идет запись (5 сек)...";
+        instructionText.style.color = "#ff4d4d"; // Красный цвет для привлечения внимания
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        try {
+            // Берем только аудио трек из общего потока
+            const audioStream = new MediaStream(stream.getAudioTracks());
+            mediaRecorder = new MediaRecorder(audioStream);
+            
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                voiceBtn.innerText = "⏳ Анализ нейросетью...";
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                
+                // Отправляем аудио на сервер
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'audio.webm');
+                
+                try {
+                    const response = await fetch('/analyze_voice', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        handleTestResult(result.fail);
+                    } else {
+                        alert("Ошибка анализа голоса: " + result.error);
+                        resetVoiceBtn();
+                    }
+                } catch (e) {
+                    console.error("Ошибка сети:", e);
+                    resetVoiceBtn();
+                }
+            };
+
+            mediaRecorder.start();
+            
+            // Останавливаем через 5 секунд
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, 5000);
+
+        } catch (e) {
+            alert("Ошибка записи аудио!");
+            resetVoiceBtn();
+        }
+    }
+
+    function resetVoiceBtn() {
+        voiceBtn.disabled = false;
+        voiceBtn.innerText = "Проверить Речь";
+        instructionText.style.color = "#ffd700";
+    }
+
+    function handleTestResult(isSpeechFail) {
+        // По протоколу FAST, наличие ХОТЯ БЫ ОДНОГО признака - повод для вызова скорой
+        if (isFaceAsymmetric || isSpeechFail) {
+            triggerSOS();
+        } else {
+            alert("Все в порядке! Признаков инсульта не обнаружено.");
+            resetVoiceBtn();
+            instructionText.innerText = "";
+        }
+    }
+
+    function triggerSOS() {
+        clearInterval(faceCheckInterval);
+        document.getElementById('sos-screen').style.display = 'flex';
+        
+        // Отправляем запрос на сервер для рассылки писем/Telegram с координатами GPS
+        fetch('/sos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patient_name: document.getElementById('p_name').value,
+                relative_name: document.getElementById('r_name').value,
+                relative_email: document.getElementById('r_email').value,
+                tg_chat_id: document.getElementById('r_tg').value,
+                fallback_address: document.getElementById('p_address').value,
+                lat: userLat,
+                lon: userLon
+            })
+        });
+
+        // Голосовая поддержка пациента
+        const calmText = "Внимание. Выявлены признаки инсульта. Пожалуйста, сохраняйте спокойствие. Сядьте в удобное положение. Обеспечьте доступ свежего воздуха. Ни в коем случае не пейте воду и не принимайте таблетки. Экстренное сообщение с вашей гео-локацией уже отправлено вашим родственникам. Помощь скоро прибудет.";
+        speak(calmText, null);
+        
+        // Мигание красным фоном
+        setInterval(() => {
+            const sosScreen = document.getElementById('sos-screen');
+            sosScreen.style.backgroundColor = sosScreen.style.backgroundColor === 'rgb(255, 0, 0)' ? '#cc0000' : '#ff0000';
+        }, 500);
+    }
+</script>
+</body>
+</html>
