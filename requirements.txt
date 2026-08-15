@@ -6,3 +6,4 @@ opencv-python-headless
 SpeechRecognition
 static-ffmpeg
 requests
+python-dotenv
