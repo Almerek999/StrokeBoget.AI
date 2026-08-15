@@ -1,0 +1,8 @@
+Flask
+gunicorn
+tensorflow-cpu
+mediapipe
+opencv-python-headless
+SpeechRecognition
+static-ffmpeg
+requests
