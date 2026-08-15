@@ -14,18 +14,34 @@ import tempfile
 
 app = Flask(__name__)
 
-# --- Загрузка ИИ Моделей ---
-print("Загрузка ИИ для оценки геометрии лица...")
-current_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(current_dir, '..', 'models', 'stroke_ai_model.h5')
-try:
-    model = load_model(model_path)
-except Exception as e:
-    print(f"Ошибка загрузки модели ИИ: {e}")
-    model = None
+# --- Ленивая Загрузка ИИ Моделей (Lazy Load) ---
+# Это нужно, чтобы бесплатный сервер не падал при запуске от нехватки времени
+model = None
+face_mesh = None
+mp_face_mesh = None
 
-mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=True)
+def get_model():
+    global model
+    if model is None:
+        try:
+            print("Загрузка модели TensorFlow...")
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(current_dir, '..', 'models', 'stroke_ai_model.h5')
+            from tensorflow.keras.models import load_model
+            model = load_model(model_path)
+        except Exception as e:
+            print(f"Ошибка загрузки модели ИИ: {e}")
+            model = None
+    return model
+
+def get_face_mesh():
+    global face_mesh, mp_face_mesh
+    if face_mesh is None:
+        print("Загрузка MediaPipe...")
+        import mediapipe as mp
+        mp_face_mesh = mp.solutions.face_mesh
+        face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=True)
+    return face_mesh, mp_face_mesh
 
 recognizer = sr.Recognizer()
 TARGET_PHRASE = "за окном сегодня светит яркое солнце"
@@ -44,13 +60,16 @@ def analyze_face():
         frame = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = face_mesh.process(rgb_frame)
+        
+        current_face_mesh, current_mp_face_mesh = get_face_mesh()
+        results = current_face_mesh.process(rgb_frame)
 
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
                 row = extract_asymmetry_features(face_landmarks)
                 input_data = np.array([row])
-                prediction = model.predict(input_data, verbose=0)[0][0]
+                current_model = get_model()
+                prediction = current_model.predict(input_data, verbose=0)[0][0] if current_model else 0.0
                 
                 return jsonify({
                     "success": True,
