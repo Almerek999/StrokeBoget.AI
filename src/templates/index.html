@@ -172,8 +172,8 @@
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
             video.srcObject = stream;
             
-            // Начинаем проверять лицо каждые 1.5 секунды
-            faceCheckInterval = setInterval(sendFaceFrame, 1500);
+            // Начинаем проверять лицо (рекурсивный вызов, чтобы не "заддосить" сервер)
+            sendFaceFrame();
         } catch (err) {
             alert("Ошибка доступа к камере или микрофону! Убедитесь, что вы открыли сайт по HTTPS.");
             console.error(err);
@@ -209,6 +209,9 @@
         } catch (e) {
             console.error("Ошибка анализа лица:", e);
         }
+        
+        // Планируем следующий кадр только ПОСЛЕ того, как пришел ответ от сервера
+        faceCheckInterval = setTimeout(sendFaceFrame, 1500);
     }
 
     function speak(text, callback) {
@@ -311,7 +314,7 @@
     }
 
     function triggerSOS() {
-        clearInterval(faceCheckInterval);
+        clearTimeout(faceCheckInterval);
         document.getElementById('sos-screen').style.display = 'flex';
         
         // Отправляем запрос на сервер для рассылки писем/Telegram с координатами GPS
