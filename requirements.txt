@@ -2,6 +2,7 @@ Flask
 gunicorn
 tensorflow-cpu==2.11.0
 mediapipe==0.10.9
+numpy<1.24
 opencv-python-headless
 SpeechRecognition
 static-ffmpeg
