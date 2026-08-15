@@ -181,7 +181,10 @@
     }
 
     async function sendFaceFrame() {
-        if (!video.videoWidth) return;
+        if (!video.videoWidth) {
+            faceCheckInterval = setTimeout(sendFaceFrame, 1500);
+            return;
+        }
         
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
