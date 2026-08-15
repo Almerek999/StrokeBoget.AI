@@ -8,8 +8,8 @@ from flask import Flask, render_template, request, jsonify
 from tensorflow.keras.models import load_model
 import mediapipe as mp
 import speech_recognition as sr
-from features import extract_asymmetry_features
-from emergency import trigger_sos
+from src.features import extract_asymmetry_features
+from src.emergency import trigger_sos
 import tempfile
 
 app = Flask(__name__)
