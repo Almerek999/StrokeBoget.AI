@@ -4,7 +4,7 @@ import base64
 import numpy as np
 import difflib
 import subprocess
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from tensorflow.keras.models import load_model
 import mediapipe as mp
 import speech_recognition as sr
@@ -13,6 +13,19 @@ from src.emergency import trigger_sos
 import tempfile
 
 app = Flask(__name__)
+
+# --- Роуты для PWA (Progressive Web App) ---
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+
+@app.route('/icon.svg')
+def serve_icon():
+    return send_from_directory('static', 'icon.svg', mimetype='image/svg+xml')
 
 # --- Ленивая Загрузка ИИ Моделей (Lazy Load) ---
 # Это нужно, чтобы бесплатный сервер не падал при запуске от нехватки времени
