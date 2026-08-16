@@ -1,6 +1,6 @@
 {
   "name": "StrokeBoget.AI",
-  "short_name": "Anti-Stroke",
+  "short_name": "StrokeBoget.AI",
   "description": "ИИ для экстренного определения признаков инсульта",
   "start_url": "/",
   "display": "standalone",
