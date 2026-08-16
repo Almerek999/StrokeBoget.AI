@@ -66,10 +66,14 @@ def send_telegram_message(bot_token, chat_id, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'HTML'}
     try:
-        requests.post(url, data=payload, timeout=5)
+        response = requests.post(url, data=payload, timeout=5)
+        response.raise_for_status()
         print("✅ Сообщение Telegram отправлено!")
     except Exception as e:
-        print(f"❌ Ошибка Telegram: {e}")
+        error_msg = e
+        if 'response' in locals() and hasattr(response, 'text'):
+            error_msg = f"{e} - {response.text}"
+        print(f"❌ Ошибка Telegram: {error_msg}")
 
 def send_emergency_email(receiver_email, subject, body):
     sender_email = os.getenv("SYSTEM_EMAIL")
