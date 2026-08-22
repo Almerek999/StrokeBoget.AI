@@ -86,7 +86,7 @@ def analyze_face():
                 
                 return jsonify({
                     "success": True,
-                    "asymmetry": bool(prediction > 0.95),  # Повышаем порог чувствительности до 95% для живой камеры
+                    "asymmetry": bool(prediction > 0.5),
                     "score": float(prediction)
                 })
                 
