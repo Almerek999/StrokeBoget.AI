@@ -7,10 +7,11 @@ StrokeBoget.AI is an AI-powered web application (leveraging computer vision and 
 Upon detecting alarming symptoms, the system automatically and instantly alerts relatives via Email and Telegram, providing them with the exact GPS coordinates, physical address of the patient, and a route to the nearest hospital.
 
 ## 🌟 Key Features
-1. **Neural Face Analysis**: Detects facial asymmetry (one of the primary indicators of a stroke) in real-time using a custom-trained neural network and `mediapipe`.
+1. **Neural Face Analysis**: Detects facial asymmetry (one of the primary indicators of a stroke) in real-time using a custom-trained neural network and `mediapipe`. Tested and validated on the academic **YFP Database**.
 2. **Speech Analysis**: Evaluates speech impairment by recording the patient's voice and comparing their dictation to a reference phrase using natural language processing.
 3. **Automated SOS Protocol**: Instantly broadcasts emergency alerts with the patient's geolocation (via Reverse Geocoding).
 4. **Nearest Hospital Routing**: Automatically locates the nearest medical facility via the OpenStreetMap API and generates a direct navigation route.
+5. **Progressive Web App (PWA)**: Works as a native mobile app without requiring App Store/Play Store downloads. Completely accessible via URL.
 
 ## 🛠 Technology Stack
 - **Backend:** Python, Flask, OpenCV, MediaPipe
